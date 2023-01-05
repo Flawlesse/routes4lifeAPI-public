@@ -1,0 +1,27 @@
+image:
+  name: docker/compose:1.29.2
+  entrypoint: [""]
+
+services:
+  - docker:dind
+
+stages:
+  - test
+
+test:
+  stage: test
+  script:
+    - make build-testimage
+    - docker-compose -f docker-compose-test.yml up -d
+    - docker-compose -f docker-compose-test.yml ps -q api
+    - docker exec --tty $(docker-compose -f docker-compose-test.yml ps -q api) poetry run python -m pytest
+    - docker-compose -f docker-compose-test.yml down
+
+lint:
+  stage: test
+  script:
+    - python --version
+    - pip --version
+    - pip install pre-commit
+    - pre-commit --version
+    - make lint
